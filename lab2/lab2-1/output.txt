@@ -1,0 +1,16 @@
+Nonlinear equation:
+f(x) = x^6 - 5x - 2
+Interval: [1.0, 5.0]
+Epsilon: 1e-06
+
+Simple iterations method:
+Root: 1.448678795609901
+Number of iterations: 7
+f(x) = 2.4604634581315565e-05
+Error: 9.6995264333122e-07
+
+Newton method:
+Root: 1.4486780564352173
+Number of iterations: 8
+f(x) = 2.3415100969259584e-09
+Error: 3.248840796951551e-11
