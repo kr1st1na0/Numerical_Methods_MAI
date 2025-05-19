@@ -1,0 +1,9 @@
+First derivative:
+df(1.4) = 2.107999999999996
+Check:
+df_scipy(1.4) = 2.075416666666666
+
+Second derivative:
+d2f(1.4) = 2.9400000000000106
+Check:
+d2f_scipy(1.4) = 3.4287499999999684

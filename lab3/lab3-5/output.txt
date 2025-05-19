@@ -1,0 +1,17 @@
+Rectangle method:
+Step = 1.0: integral = 15.353452420289436
+Step = 0.5: integral = 15.317782947920461
+Error rate: = 0.04755929649196607
+More accurate integral (runge_rombert): = 15.30589312379747
+
+Trapeze method:
+Step = 1.0: integral = 15.21006830755259
+Step = 0.5: integral = 15.281760363921011
+Error rate: = 0.09558940849122877
+More accurate integral (runge_rombert): = 15.305657716043818
+
+Simpson method:
+Step = 1.0: integral = 15.304023333311614
+Step = 0.5: integral = 15.30565771604382
+Error rate: = 0.0017433415810198009
+More accurate integral (runge_rombert): = 15.305766674892634
