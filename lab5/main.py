@@ -147,7 +147,6 @@ def plot_solutions(x, t_target, t_range, h, sigma, a, **solutions):
     
     plt.figure(figsize=(12, 6))
     for name, sol in solutions.items():
-        # plt.plot(x, sol[k_target, :], label=name)
         plt.plot(x, sol[k_target, :], 'o', label=name)
     
     u_analytical = analytical_solution(x, t_target, a)
