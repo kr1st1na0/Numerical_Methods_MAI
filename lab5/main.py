@@ -222,7 +222,7 @@ def main():
         Crank_Nicolson=u_cn
     )
 
-'''
+
 def compute_error_at_final_time(u_num, x, t_final, a):
     u_true = analytical_solution(x, t_final, a)
     return np.max(np.abs(u_num[-1, :] - u_true))
@@ -387,8 +387,8 @@ def main_convergence():
     hs, err_h_dict = convergence_in_space(a, tau_fixed, t_range, h_values, x_range)
 
     plot_convergence(taus, err_tau_dict, hs, err_h_dict)
-'''
+
 
 if __name__ == "__main__":
     main()
-    # main_convergence()
+    main_convergence()

@@ -359,7 +359,181 @@ def main_init_approx():
         #     Implicit=u_imp
         # )
 
+
+def compute_error_at_final_time(u_num, x, t_final, a):
+    u_true = analytical_solution(x, t_final, a)
+    return np.max(np.abs(u_num[-1, :] - u_true))
+
+def convergence_in_time(a, h_fixed, t_range, tau_values, x_range):
+    errors_explicit = []
+    
+    errors_implicit = []
+    valid_taus = []
+    
+    t_final = t_range[1]
+    
+    for tau in tau_values:
+        # Проверка устойчивости явной схемы
+        sigma = a**2 * tau**2 / h_fixed**2
+
+        if sigma > 1.0:
+            print(f"tau={tau:.6f}: sigma={sigma:.3f} > 1, пропускаем явную схему")
+            errors_explicit.append(np.nan)
+        else:
+            try:
+                u_exp, x, _ = explicit(h_fixed, tau, t_range, x_range)
+                err_exp = compute_error_at_final_time(u_exp, x, t_final, a)
+                errors_explicit.append(err_exp)
+            except Exception as e:
+                print(f"Ошибка в явной схеме при tau={tau:.6f}: {e}")
+                errors_explicit.append(np.nan)
+        
+        try:
+            u_imp, x, _ = implicit(h_fixed, tau, t_range, x_range)
+            err_imp = compute_error_at_final_time(u_imp, x, t_final, a)
+            errors_implicit.append(err_imp)
+        except Exception as e:
+            print(f"Ошибка в неявной схеме при tau={tau:.6f}: {e}")
+            errors_implicit.append(np.nan)
+        
+        valid_taus.append(tau)
+    
+    return np.array(valid_taus), {'Explicit': np.array(errors_explicit), 
+                                   'Implicit': np.array(errors_implicit)}
+
+def convergence_in_space(a, tau_fixed, t_range, h_values, x_range):
+    errors_explicit = []
+    errors_implicit = []
+    valid_hs = []
+    
+    t_final = t_range[1]
+    
+    for h in h_values:
+        # Проверка устойчивости явной схемы
+        sigma = a**2 * tau_fixed**2 / h**2
+        
+        if sigma > 1.0:
+            print(f"h={h:.6f}: sigma={sigma:.3f} > 1, пропускаем явную схему")
+            errors_explicit.append(np.nan)
+        else:
+            try:
+                u_exp, x, _ = explicit(h, tau_fixed, t_range, x_range)
+                err_exp = compute_error_at_final_time(u_exp, x, t_final, a)
+                errors_explicit.append(err_exp)
+            except Exception as e:
+                print(f"Ошибка в явной схеме при h={h:.6f}: {e}")
+                errors_explicit.append(np.nan)
+        
+        try:
+            u_imp, x, _ = implicit(h, tau_fixed, t_range, x_range)
+            err_imp = compute_error_at_final_time(u_imp, x, t_final, a)
+            errors_implicit.append(err_imp)
+        except Exception as e:
+            print(f"Ошибка в неявной схеме при h={h:.6f}: {e}")
+            errors_implicit.append(np.nan)
+        
+        valid_hs.append(h)
+    
+    return np.array(valid_hs), {'Explicit': np.array(errors_explicit), 
+                                 'Implicit': np.array(errors_implicit)}
+
+def plot_convergence(taus, err_tau_dict, hs, err_h_dict):
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
+    
+    colors = {
+        'Explicit': 'red',
+        'Implicit': 'blue'
+    }
+    markers = {
+        'Explicit': 'o',
+        'Implicit': 's'
+    }
+
+    # Сходимость по времени (при фиксированном h)
+    for method in ['Explicit', 'Implicit']:
+        err = err_tau_dict[method]
+        valid = ~np.isnan(err)
+        if np.any(valid):
+            ax1.plot(taus[valid], err[valid], 
+                     marker=markers[method], color=colors[method], 
+                     label=method, markersize=6, linewidth=1.5)
+    
+    # Теоретические линии сходимости
+    valid_imp = ~np.isnan(err_tau_dict['Implicit'])
+    if np.any(valid_imp):
+        tau_ref = taus[valid_imp]
+        err_ref = err_tau_dict['Implicit'][valid_imp]
+        C1 = err_ref[0] / tau_ref[0]
+        ax1.plot(tau_ref, C1 * tau_ref, 'k--', label=r'$O(\tau)$')
+    
+    ax1.set_xlabel(r'Шаг по времени $\tau$')
+    ax1.set_ylabel('Максимальная погрешность в конечный момент')
+    ax1.set_title('Сходимость по времени (фиксированный $h$)')
+    ax1.grid(True, which="both", ls=":", linewidth=0.5)
+    ax1.set_xscale('log')
+    ax1.set_yscale('log')
+    ax1.legend()
+
+    # Сходимость по пространству (при фиксированном tau)
+    for method in ['Explicit', 'Implicit']:
+        err = err_h_dict[method]
+        valid = ~np.isnan(err)
+        if np.any(valid):
+            ax2.plot(hs[valid], err[valid], 
+                     marker=markers[method], color=colors[method], 
+                     label=method, markersize=6, linewidth=1.5)
+    
+    # Теоретическая линия сходимости O(h²)
+    valid_exp = ~np.isnan(err_h_dict['Explicit'])
+    if np.any(valid_exp):
+        h_ref = hs[valid_exp]
+        err_ref = err_h_dict['Explicit'][valid_exp]
+        C2 = err_ref[0] / (h_ref[0] ** 2)
+        ax2.plot(h_ref, C2 * h_ref**2, 'k--', label=r'$O(h^2)$')
+    
+    ax2.set_xlabel(r'Шаг по пространству $h$')
+    ax2.set_ylabel('Максимальная погрешность в конечный момент')
+    ax2.set_title('Сходимость по пространству (фиксированный $\tau$)')
+    ax2.grid(True, which="both", ls=":", linewidth=0.5)
+    ax2.set_xscale('log')
+    ax2.set_yscale('log')
+    ax2.legend()
+
+    plt.tight_layout()
+    plt.show()
+    
+
+def main_convergence():
+    a = 1.0
+    x_range = [0.0, np.pi]
+    t_range = [0.0, 1.0]
+    
+    # Сходимость по времени (фиксированный h)
+    N_fixed = 50
+    h_fixed = (x_range[1] - x_range[0]) / N_fixed
+    
+    # Различные шаги по времени
+    K_values = np.array([50, 100, 200, 400, 800])
+    tau_values = (t_range[1] - t_range[0]) / K_values
+    
+    taus, err_tau_dict = convergence_in_time(a, h_fixed, t_range, tau_values, x_range)
+    
+    
+    # Сходимость по пространству (фиксированный tau)
+    K_fixed = 500
+    tau_fixed = (t_range[1] - t_range[0]) / K_fixed
+    
+    # Различные шаги по пространству
+    N_values = np.array([20, 30, 40, 60, 80, 100])
+    h_values = (x_range[1] - x_range[0]) / N_values
+    
+    hs, err_h_dict = convergence_in_space(a, tau_fixed, t_range, h_values, x_range)
+    
+    plot_convergence(taus, err_tau_dict, hs, err_h_dict)
+
+
 if __name__ == "__main__":
     main()
     main_approx()
     main_init_approx()
+    main_convergence()
