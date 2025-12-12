@@ -82,7 +82,7 @@ def show_errors(lx, hy, Ny):
 
 
 # Функция для отрисовки решения в сечениях по y
-def show_solution_slices(Nx, Ny, hx, hy, U, ulieb, usei, usor, y_slices=[0.2, 0.5, 0.8]):
+def show_solution_slices_y(Nx, Ny, hx, hy, U, ulieb, usei, usor, y_slices=[0.2, 0.5, 0.8]):
     # y_slices: [0.2, 0.5, 0.8] => y = 0.2*ly, 0.5*ly, 0.8*ly
     x_array = np.array([i * hx for i in range(Nx + 1)])
     colors = ['black', 'blue', 'green', 'red']
@@ -107,6 +107,45 @@ def show_solution_slices(Nx, Ny, hx, hy, U, ulieb, usei, usor, y_slices=[0.2, 0.
         ax.set_xlabel('x')
         ax.set_ylabel('U(x, y)')
         ax.set_title(f'Решение при y = {y_fixed:.2f}')
+        plt.grid()
+        ax.legend()
+        plt.show()
+
+
+def show_solution_slices_x(Nx, Ny, hx, hy, U, ulieb, usei, usor, x_slices=[0.2, 0.5, 0.8]):
+    # Вычисляем длину области
+    lx = Nx * hx
+    ly = Ny * hy
+    
+    # Массив координат y
+    y_array = np.array([j * hy for j in range(Ny + 1)])
+    
+    colors = ['black', 'blue', 'green', 'red']
+    
+    for x_ratio in x_slices:
+        x_fixed = x_ratio * lx
+        x_index = int(x_fixed / hx)
+        if x_index >= Nx + 1:
+            x_index = Nx
+        
+        fig, ax = plt.subplots(figsize=(10, 6))
+        
+        # Точное решение
+        u_correct = U(x_fixed, y_array)
+        
+        # Численные решения (сечение по строке)
+        u_liebman = ulieb[x_index, :]
+        u_seidel = usei[x_index, :]
+        u_sor = usor[x_index, :]
+        
+        plt.plot(y_array, u_correct, color=colors[0], label=f'Точное решение')
+        plt.plot(y_array, u_liebman, color=colors[1], label='Метод Либмана')
+        plt.plot(y_array, u_seidel, color=colors[2], label='Метод Зейделя')
+        plt.plot(y_array, u_sor, color=colors[3], label='Метод простых итераций с верхней релаксацией')
+
+        ax.set_xlabel('x')
+        ax.set_ylabel('U(x, y)')
+        ax.set_title(f'Решение при x = {x_fixed:.2f}')
         plt.grid()
         ax.legend()
         plt.show()
@@ -240,7 +279,10 @@ def main():
     show_solution3d(Nx, Ny, hx, hy, u3, "UpperRelaxation_method", elev=20, azim=110)
 
     # Построение графиков решений в сечениях по y
-    show_solution_slices(Nx, Ny, hx, hy, U, u1, u2, u3, y_slices=[0.2, 0.5, 0.8])
+    show_solution_slices_y(Nx, Ny, hx, hy, U, u1, u2, u3, y_slices=[0.2, 0.5, 0.8])
+
+    # Построение графиков решений в сечениях по x
+    show_solution_slices_x(Nx, Ny, hx, hy, U, u1, u2, u3, x_slices=[0.2, 0.5, 0.8])
 
     # График погрешностей
     show_errors(lx, hy, Ny)
